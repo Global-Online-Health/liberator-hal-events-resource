@@ -1,23 +1,20 @@
 (ns liberator-hal-events-resource.events-resource
   (:require
-    [halboy.resource :as hal]
+   [halboy.resource :as hal]
 
-    [hype.core :as hype]
+   [hype.core :as hype]
 
-    [liberator-mixin.core :refer [build-resource]]
-    [liberator-mixin.json.core :refer [with-json-mixin]]
-    [liberator-mixin.validation.core :refer [with-validation-mixin]]
-    [liberator-mixin.hypermedia.core :refer [with-hypermedia-mixin]]
-    [liberator-mixin.hal.core :refer [with-hal-mixin]]))
+   [liberator-mixin.core :refer [build-resource]]
+   [liberator-mixin.json.core :refer [with-json-mixin]]
+   [liberator-mixin.validation.core :refer [with-validation-mixin]]
+   [liberator-mixin.hypermedia.core :refer [with-hypermedia-mixin]]
+   [liberator-mixin.hal.core :refer [with-hal-mixin]]))
 
 (defn with-unauthorised-handling
   []
   {:handle-forbidden
    (fn [_]
      (hal/new-resource))})
-
-(defn events-url-for [request routes]
-  (hype/absolute-url-for request routes :events))
 
 (defn load-and-transform-events [events-loader-fn events-transformer-fn]
   (let [events (events-loader-fn)
@@ -26,8 +23,7 @@
     [events event-resources event-links]))
 
 (defn events-link-for [request routes query-params]
-  {:href  (events-url-for request routes)
-   :query query-params})
+  {:href (hype/absolute-url-for request routes :events {:query-params query-params})})
 
 (defn self-link-for [request routes since page-size]
   (events-link-for request routes
@@ -42,13 +38,20 @@
       {:since since
        :pick  page-size})))
 
+(defn add-next-link
+  [resource request routes events page-size]
+  (if-not (empty? events)
+    (hal/add-link resource :next (next-link-for request routes events page-size))
+    resource))
+
 (defprotocol EventsLoader
   (load-events [this parameters]))
 
-(defn build-events-resource [dependencies
-                             default-page-size
-                             events-loader
-                             events-transformer-fn]
+(defn build-events-resource
+  [dependencies
+   default-page-size
+   events-loader
+   events-transformer-fn]
   (let [routes (:routes dependencies)]
     (build-resource
       (with-json-mixin dependencies)
@@ -73,9 +76,6 @@
                (hal/new-resource)
                (hal/add-links
                  {:self   (self-link-for request routes since page-size)
-                  :events event-links
-                  :next   (if-not (empty? events)
-                            (next-link-for
-                              request routes events page-size)
-                            (self-link-for request routes since page-size))})
+                  :events event-links})
+               (add-next-link request routes events page-size)
                (hal/add-resource :events event-resources)))))})))

@@ -1,24 +1,25 @@
 (ns liberator-hal-events-resource.events-resource-test
   (:require
-    [clojure.test :refer :all]
-    [clojure.string :refer [ends-with?]]
+   [clojure.test :refer :all]
+   [clojure.string :refer [ends-with?]]
 
-    [halboy.resource :as hal]
-    [halboy.json :as haljson]
+   [halboy.resource :as hal]
+   [halboy.json :as haljson]
 
-    [ring.mock.request :as ring]
-    [ring.middleware.params :as params]
-    [ring.middleware.keyword-params :as keyword-params]
+   [ring.mock.request :as ring]
+   [ring.middleware.params :as params]
+   [ring.middleware.keyword-params :as keyword-params]
 
-    [org.bovinegenius.exploding-fish :refer [absolute?]]
+   [org.bovinegenius.exploding-fish :refer [absolute?]]
 
-    [liberator-hal-events-resource.events :as events]
-    [liberator-hal-events-resource.events-resource :refer :all]
-    [liberator-hal-events-resource.stubs.data :as data]
-    [liberator-hal-events-resource.stubs.stubs :as stubs]))
+   [liberator-hal-events-resource.events :as events]
+   [liberator-hal-events-resource.events-resource :refer :all]
+   [liberator-hal-events-resource.stubs.data :as data]
+   [liberator-hal-events-resource.stubs.stubs :as stubs]))
 
 (deftest events-resource-GET-on-success
-  (let [routes [["/events" :events]]
+  (let [routes [""
+                [["/events" :events]]]
         event-1 (data/make-random-event)
         event-2 (data/make-random-event)
         events-resource (-> (build-events-resource
@@ -38,7 +39,8 @@
               (hal/get-resource resource :events)))))))
 
 (deftest events-resource-GET-on-no-events-found
-  (let [routes [["/events" :events]]
+  (let [routes [""
+                [["/events" :events]]]
         events-resource (-> (build-events-resource
                               {:routes routes} 10
                               (stubs/->StubEventsLoader [])
@@ -56,7 +58,8 @@
       (is (= [] (hal/get-resource resource :events))))))
 
 (deftest events-resource-GET-on-events-found
-  (let [routes [["/events" :events]]
+  (let [routes [""
+                [["/events" :events]]]
         first-event-id (data/random-uuid)
         second-event-id (data/random-uuid)
         third-event-id (data/random-uuid)
@@ -84,7 +87,8 @@
                     :id) events))))))
 
 (deftest events-resource-GET-on-page-size-specified
-  (let [routes [["/events" :events]]
+  (let [routes [""
+                [["/events" :events]]]
         first-event-id (data/random-uuid)
         second-event-id (data/random-uuid)
         third-event-id (data/random-uuid)
@@ -106,13 +110,11 @@
         first-resource (haljson/map->resource (:body first-result))
         first-page (hal/get-resource first-resource :events)
 
-        query-params (-> first-resource
-                       (hal/get-link :next)
-                       (:query))
+        next-href (hal/get-href first-resource :next)
 
         second-result (stubs/call-resource
                         events-resource
-                        (ring/request :get "/events" query-params))
+                        (ring/request :get next-href))
         second-page (haljson/map->resource (:body second-result))]
     (testing "returns ids to those events"
       (is (= [first-event-id second-event-id]
@@ -130,7 +132,8 @@
         (is (= [third-event-id] event-ids))))))
 
 (deftest events-resource-GET-on-order-specified
-  (let [routes [["/events" :events]]
+  (let [routes [""
+                [["/events" :events]]]
         first-event-id (data/random-uuid)
         second-event-id (data/random-uuid)
         third-event-id (data/random-uuid)
@@ -175,7 +178,14 @@
         first-result (stubs/call-resource
                        events-resource
                        (ring/request :get "/events" {:pick page-size}))
-        first-resource (haljson/map->resource (:body first-result))]
-    (testing "the next link points to the same page"
-      (is (= (get-in (hal/get-link first-resource :next) [:query :since])
-            first-event-id)))))
+        first-resource (haljson/map->resource (:body first-result))
+
+        next-href (hal/get-href first-resource :next)
+
+        second-result (stubs/call-resource
+                        events-resource
+                        (ring/request :get next-href))
+        second-page (haljson/map->resource (:body second-result))]
+    (testing "final page has no events"
+      (is (empty? (hal/get-resource second-page :events)))
+      (is (empty? (hal/get-link second-page :events))))))
