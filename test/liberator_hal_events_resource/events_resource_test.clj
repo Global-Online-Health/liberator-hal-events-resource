@@ -36,7 +36,7 @@
 
     (testing "contains self link "
       (is (string/includes? (hal/get-href resource :self)
-                            "/events")))
+            "/events")))
 
     (testing "transform the event correctly"
       (is (= [(:id event-1) (:id event-2)]
@@ -206,8 +206,8 @@
                               (stubs/->StubEventsLoader [event-1 event-2])
                               events/event->resource
                               {:route-key :other-events})
-                            (keyword-params/wrap-keyword-params)
-                            (params/wrap-params))
+                          (keyword-params/wrap-keyword-params)
+                          (params/wrap-params))
         result (stubs/call-resource
                  events-resource
                  (ring/request :get "/other-events"))
@@ -215,9 +215,8 @@
 
     (testing "self link contain alternative route"
       (is (string/includes? (hal/get-href resource :self)
-                            "/other-events")))
+            "/other-events")))
 
     (testing "next link contain alternative route"
-       (is (string/includes? (hal/get-href resource :next)
-                             "/other-events")))))
-
+      (is (string/includes? (hal/get-href resource :next)
+            "/other-events")))))

@@ -1,9 +1,9 @@
 (ns liberator-hal-events-resource.stubs.stubs
   (:require
-   [jason.convenience :refer [<-wire-json]]
+    [jason.convenience :refer [<-wire-json]]
 
-   [liberator-hal-events-resource.events-resource
-    :refer [EventsLoader]]))
+    [liberator-hal-events-resource.events-resource
+     :refer [EventsLoader]]))
 
 (defn call-resource [resource request]
   (-> (resource request)

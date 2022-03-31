@@ -1,6 +1,6 @@
-(defproject b-social/liberator-hal-events-resource "0.0.18-SNAPSHOT"
+(defproject b-social/liberator-hal-events-resource "0.0.19"
   :description "A HAL events resource for liberator."
-  :url "https://github.com/b-social/liberator-hal-events-resource"
+  :url "https://github.com/Global-Online-Health/liberator-hal-events-resource"
 
   :license {:name "The MIT License"
             :url  "https://opensource.org/licenses/MIT"}
@@ -18,7 +18,8 @@
             [lein-codox "0.10.7"]
             [lein-cljfmt "0.6.4"]
             [lein-kibit "0.1.6"]
-            [lein-bikeshed "0.5.1"]]
+            [lein-bikeshed "0.5.1"]
+            [jonase/eastwood "0.3.11"]]
 
   :profiles {:shared {:dependencies
                       [[org.clojure/clojure "1.10.1"]

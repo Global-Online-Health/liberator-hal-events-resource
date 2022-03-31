@@ -24,30 +24,32 @@
 
 (defn events-link-for [request routes query-params options]
   {:href (hype/absolute-url-for request routes
-                                (:route-key options :events)
-                                {:query-params query-params})})
+           (:route-key options :events)
+           {:query-params query-params})})
 
 (defn self-link-for [request routes since page-size options]
   (events-link-for request
-                   routes
-                   (merge
-                     {:pick page-size}
-                     (when-not (nil? since)
-                       {:since since}))
-                   options))
+    routes
+    (merge
+      {:pick page-size}
+      (when-not (nil? since)
+        {:since since}))
+    options))
 
 (defn next-link-for [request routes events page-size options]
   (let [since (:id (last events))]
     (events-link-for request
-                     routes
-                     {:since since
-                      :pick  page-size}
-                     options)))
+      routes
+      {:since since
+       :pick  page-size}
+      options)))
 
 (defn add-next-link
   [resource request routes events page-size options]
   (if-not (empty? events)
-    (hal/add-link resource :next (next-link-for request routes events page-size options))
+    (hal/add-link resource
+      :next
+      (next-link-for request routes events page-size options))
     resource))
 
 (defprotocol EventsLoader
@@ -58,40 +60,42 @@
     default-page-size
     events-loader
     events-transformer-fn]
-   (build-events-resource dependencies
-                          default-page-size
-                          events-loader
-                          events-transformer-fn
-                          {}))
+    (build-events-resource dependencies
+      default-page-size
+      events-loader
+      events-transformer-fn
+      {}))
   ([dependencies
     default-page-size
     events-loader
     events-transformer-fn
     options]
-   (let [routes (:routes dependencies)]
-     (build-resource
-       (with-json-mixin dependencies)
-       (with-validation-mixin dependencies)
-       (with-hypermedia-mixin dependencies)
-       (with-hal-mixin dependencies)
-       (with-unauthorised-handling)
+    (let [routes (:routes dependencies)]
+      (build-resource
+        (with-json-mixin dependencies)
+        (with-validation-mixin dependencies)
+        (with-hypermedia-mixin dependencies)
+        (with-hal-mixin dependencies)
+        (with-unauthorised-handling)
 
-       {:allowed-methods
-        [:get]
-        :handle-ok
-        (fn [{:keys [request]}]
-          (let [since (get-in request [:params :since] nil)
-                order (.toUpperCase (get-in request [:params :order] "ASC"))
-                page-size (get-in request [:params :pick] default-page-size)]
-            (let [[events event-resources event-links]
-                  (load-and-transform-events
-                    #(load-events events-loader
-                                  {:since since :pick page-size :order order})
-                    #(events-transformer-fn dependencies request routes %))]
-              (->
-                (hal/new-resource)
-                (hal/add-links
-                  {:self   (self-link-for request routes since page-size options)
-                   :events event-links})
-                (add-next-link request routes events page-size options)
-                (hal/add-resource :events event-resources)))))}))))
+        {:allowed-methods
+         [:get]
+         :handle-ok
+         (fn [{:keys [request]}]
+           (let [since (get-in request [:params :since] nil)
+                 order (.toUpperCase (get-in request [:params :order] "ASC"))
+                 page-size (get-in request [:params :pick] default-page-size)]
+             (let [[events event-resources event-links]
+                   (load-and-transform-events
+                     #(load-events events-loader
+                        {:since since :pick page-size :order order})
+                     #(events-transformer-fn dependencies request routes %))]
+               (->
+                 (hal/new-resource)
+                 (hal/add-links
+                   {:self
+                    (self-link-for request routes since page-size options)
+                    :events
+                    event-links})
+                 (add-next-link request routes events page-size options)
+                 (hal/add-resource :events event-resources)))))}))))
