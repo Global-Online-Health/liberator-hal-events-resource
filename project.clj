@@ -1,4 +1,4 @@
-(defproject b-social/liberator-hal-events-resource "0.0.19"
+(defproject ai.mypulse/liberator-hal-events-resource "0.1.0-RC1"
   :description "A HAL events resource for liberator."
   :url "https://github.com/Global-Online-Health/liberator-hal-events-resource"
 
@@ -38,7 +38,7 @@
   {:namespaces  [#"^liberator-hal-events-resource\."]
    :output-path "docs"
    :doc-paths   ["docs"]
-   :source-uri  "https://github.com/b-social/liberator-hal-events-resource/blob/{version}/{filepath}#L{line}"}
+   :source-uri  "https://github.com/Global-Online-Health/liberator-hal-events-resource/blob/{version}/{filepath}#L{line}"}
 
   :cljfmt {:indents ^:replace {#".*" [[:inner 0]]}}
 
