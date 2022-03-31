@@ -27,3 +27,28 @@ Copyright B-Social Limited © 2019
 
 Distributed under the Eclipse Public License either version 1.0 or (at
 your option) any later version.
+
+## Secrets
+
+#### Managing CircleCI keys
+
+To encrypt a GPG key for use by CircleCI:
+
+```bash
+openssl aes-256-cbc \
+  -e \
+  -md sha1 \
+  -in ./config/secrets/ci/gpg.private \
+  -out ./.circleci/gpg.private.enc \
+  -k "<passphrase>"
+```
+
+To check decryption is working correctly:
+
+```bash
+openssl aes-256-cbc \
+  -d \
+  -md sha1 \
+  -in ./.circleci/gpg.private.enc \
+  -k "<passphrase>"
+```

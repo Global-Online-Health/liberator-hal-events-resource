@@ -35,7 +35,7 @@ namespace :keys do
   namespace :deploy do
     RakeSSH.define_key_tasks(
       path: 'config/secrets/ci/',
-      comment: 'maintainers@logicblocks.io'
+      comment: 'devs@mypulse.ai'
     )
   end
 
@@ -44,9 +44,9 @@ namespace :keys do
       RakeGPG.define_generate_key_task(
         output_directory: 'config/secrets/ci',
         name_prefix: 'gpg',
-        owner_name: 'LogicBlocks Maintainers',
-        owner_email: 'maintainers@logicblocks.io',
-        owner_comment: 'configurati CI Key'
+        owner_name: 'MyPulse Maintainers',
+        owner_email: 'devs@mypulse.ai',
+        owner_comment: 'liberator-hal-events-resource CI Key'
       )
     end
 
@@ -65,7 +65,7 @@ end
 
 RakeCircleCI.define_project_tasks(
   namespace: :circle_ci,
-  project_slug: 'github/logicblocks/configurati'
+  project_slug: 'github/Global-Online-Health/liberator-hal-events-resource'
 ) do |t|
   circle_ci_config =
     YAML.load_file('config/secrets/circle_ci/config.yaml')
@@ -87,7 +87,7 @@ end
 
 RakeGithub.define_repository_tasks(
   namespace: :github,
-  repository: 'logicblocks/configurati',
+  repository: 'Global-Online-Health/liberator-hal-events-resource',
 ) do |t|
   github_config =
     YAML.load_file('config/secrets/github/config.yaml')
