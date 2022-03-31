@@ -7,13 +7,13 @@
 (defmethod event->resource :test-event-1
   [dependencies request routes event]
   (->
-    (hal/new-resource)
+    (hal/new-resource "blabla")
     (hal/add-properties
       {:event event})))
 
 (defmethod event->resource :test-event-2
   [dependencies request routes event]
   (->
-    (hal/new-resource)
+    (hal/new-resource "blaBla2")
     (hal/add-properties
       {:event event})))

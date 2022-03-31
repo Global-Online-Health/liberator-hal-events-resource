@@ -1,21 +1,22 @@
 (ns liberator-hal-events-resource.events-resource-test
   (:require
-   [clojure.test :refer :all]
-   [clojure.string :refer [ends-with?]]
+    [clojure.test :refer :all]
+    [clojure.string :refer [ends-with?]]
 
-   [halboy.resource :as hal]
-   [halboy.json :as haljson]
+    [halboy.resource :as hal]
+    [halboy.json :as haljson]
 
-   [ring.mock.request :as ring]
-   [ring.middleware.params :as params]
-   [ring.middleware.keyword-params :as keyword-params]
+    [ring.mock.request :as ring]
+    [ring.middleware.params :as params]
+    [ring.middleware.keyword-params :as keyword-params]
 
-   [org.bovinegenius.exploding-fish :refer [absolute?]]
+    [org.bovinegenius.exploding-fish :refer [absolute?]]
 
-   [liberator-hal-events-resource.events :as events]
-   [liberator-hal-events-resource.events-resource :refer :all]
-   [liberator-hal-events-resource.stubs.data :as data]
-   [liberator-hal-events-resource.stubs.stubs :as stubs]))
+    [liberator-hal-events-resource.events :as events]
+    [liberator-hal-events-resource.events-resource :refer :all]
+    [liberator-hal-events-resource.stubs.data :as data]
+    [liberator-hal-events-resource.stubs.stubs :as stubs]
+    [clojure.string :as string]))
 
 (deftest events-resource-GET-on-success
   (let [routes [""
@@ -32,6 +33,10 @@
                  events-resource
                  (ring/request :get "/events"))
         resource (haljson/map->resource (:body result))]
+
+    (testing "contains self link "
+      (is (string/includes? (hal/get-href resource :self)
+                            "/events")))
 
     (testing "transform the event correctly"
       (is (= [(:id event-1) (:id event-2)]
@@ -189,3 +194,30 @@
     (testing "final page has no events"
       (is (empty? (hal/get-resource second-page :events)))
       (is (empty? (hal/get-link second-page :events))))))
+
+(deftest events-resource-GET-on-success-with-different-route
+  (let [routes [""
+                [["/other-events" :other-events]]]
+        event-1 (data/make-random-event)
+        event-2 (data/make-random-event)
+        events-resource (-> (build-events-resource
+                              {:routes routes}
+                              1
+                              (stubs/->StubEventsLoader [event-1 event-2])
+                              events/event->resource
+                              {:route-key :other-events})
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
+        result (stubs/call-resource
+                 events-resource
+                 (ring/request :get "/other-events"))
+        resource (haljson/map->resource (:body result))]
+
+    (testing "self link contain alternative route"
+      (is (string/includes? (hal/get-href resource :self)
+                            "/other-events")))
+
+    (testing "next link contain alternative route"
+       (is (string/includes? (hal/get-href resource :next)
+                             "/other-events")))))
+
