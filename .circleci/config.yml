@@ -1,46 +1,53 @@
 version: 2.1
+
+defaults: &defaults
+  docker:
+    - image: ruby:2.7.4
+
+only_master: &only_master
+  filters:
+    branches:
+      only:
+        - master
+
+commands:
+  install_java:
+    steps:
+      - run: ./scripts/ci/common/install-openjdk.sh
+  configure_release:
+    steps:
+      - run: ./scripts/ci/common/upgrade-gpg.sh
+      - run: ./scripts/ci/common/install-git-crypt.sh
+      - run: ./scripts/ci/common/install-gpg-key.sh
+      - run: ./scripts/ci/common/configure-git.sh
+      - run: ./scripts/ci/common/configure-clojars.sh
+
 jobs:
   build:
-    working_directory: ~/source
-    docker:
-      - image: ruby:2.7.4
+    <<: *defaults
     steps:
       - checkout
-      - run: ./scripts/ci/common/install-openjdk.sh
+      - install_java
       - run: ./scripts/ci/steps/build.sh
   test:
-    working_directory: ~/source
-    docker:
-      - image: ruby:2.7.4
+    <<: *defaults
     steps:
       - checkout
-      - run: ./scripts/ci/common/install-openjdk.sh
+      - install_java
       - run: ./scripts/ci/steps/test.sh
   prerelease:
-    working_directory: ~/source
-    docker:
-      - image: ruby:2.7.4
+    <<: *defaults
     steps:
       - checkout
-      - run: ./scripts/ci/common/install-openjdk.sh
-      - run: ./scripts/ci/common/upgrade-gpg.sh
-      - run: ./scripts/ci/common/install-git-crypt.sh
-      - run: ./scripts/ci/common/install-gpg-key.sh
-      - run: ./scripts/ci/common/configure-git.sh
-      - run: ./scripts/ci/common/configure-clojars.sh
+      - install_java
+      - configure_release
       - run: ./scripts/ci/steps/prerelease.sh
   release:
-    working_directory: ~/source
-    docker:
-      - image: ruby:2.7.4
+    <<: *defaults
     steps:
       - checkout
-      - run: ./scripts/ci/common/install-openjdk.sh
-      - run: ./scripts/ci/common/upgrade-gpg.sh
-      - run: ./scripts/ci/common/install-git-crypt.sh
-      - run: ./scripts/ci/common/install-gpg-key.sh
-      - run: ./scripts/ci/common/configure-git.sh
-      - run: ./scripts/ci/common/configure-clojars.sh
+      - install_java
+      - configure_release
       - run: ./scripts/ci/steps/release.sh
 
 workflows:
@@ -52,21 +59,15 @@ workflows:
           requires:
             - build
       - prerelease:
+          <<: *only_master
           requires:
             - test
-          filters:
-            branches:
-              only: master
       - hold:
+          <<: *only_master
           type: approval
           requires:
             - prerelease
-          filters:
-            branches:
-              only: master
       - release:
+          <<: *only_master
           requires:
             - hold
-          filters:
-            branches:
-              only: master
