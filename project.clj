@@ -1,4 +1,4 @@
-(defproject ai.mypulse/liberator-hal-events-resource "0.1.1-SNAPSHOT"
+(defproject ai.mypulse/liberator-hal-events-resource "0.1.1-RC1"
   :description "A HAL events resource for liberator."
   :url "https://github.com/Global-Online-Health/liberator-hal-events-resource"
 
@@ -21,15 +21,45 @@
             [lein-bikeshed "0.5.1"]
             [jonase/eastwood "0.3.11"]]
 
-  :profiles {:shared {:dependencies
-                      [[org.clojure/clojure "1.10.1"]
-                       [ring/ring-mock "0.4.0"]
-                       [clj-time "0.15.1"]
-                       [faker "0.3.2"]
-                       [eftest "0.5.8"]]}
-             :dev    [:shared {:source-paths ["dev"]
-                               :eftest       {:multithread? false}}]
-             :test   [:shared {:eftest {:multithread? false}}]}
+  :profiles
+  {:shared {:dependencies
+            [[org.clojure/clojure "1.10.1"]
+             [ring/ring-mock "0.4.0"]
+             [clj-time "0.15.1"]
+             [faker "0.3.2"]
+             [eftest "0.5.8"]]}
+   :dev    [:shared {:source-paths ["dev"]
+                     :eftest       {:multithread? false}}]
+   :test   [:shared {:eftest {:multithread? false}}]
+
+   :prerelease
+   {:release-tasks
+    [["shell" "git" "diff" "--exit-code"]
+     ["change" "version" "leiningen.release/bump-version" "rc"]
+     ["change" "version" "leiningen.release/bump-version" "release"]
+     ["vcs" "commit" "Pre-release version %s [skip ci]"]
+     ["vcs" "tag"]
+     ["deploy"]]}
+   :release
+   {:release-tasks
+    [["shell" "git" "diff" "--exit-code"]
+     ["change" "version" "leiningen.release/bump-version" "release"]
+     ["codox"]
+     ["changelog" "release"]
+     ["shell" "sed" "-E" "-i.bak" "s/\"[0-9]+\\.[0-9]+\\.[0-9]+\"/\"${:version}\"/g" "README.md"]
+     ["shell" "rm" "-f" "README.md.bak"]
+     ["shell" "git" "add" "."]
+     ["vcs" "commit" "Release version %s [skip ci]"]
+     ["vcs" "tag"]
+     ["deploy"]
+     ["change" "version" "leiningen.release/bump-version" "patch"]
+     ["change" "version" "leiningen.release/bump-version" "rc"]
+     ["change" "version" "leiningen.release/bump-version" "release"]
+     ["vcs" "commit" "Pre-release version %s [skip ci]"]
+     ["vcs" "tag"]
+     ["vcs" "push"]]}}
+
+  :target-path "target/%s/"
 
   :cloverage
   {:ns-exclude-regex [#"^user"]}
@@ -43,30 +73,5 @@
   :cljfmt {:indents ^:replace {#".*" [[:inner 0]]}}
 
   :deploy-repositories
-  {"releases" {:url "https://repo.clojars.org" :creds :gpg}}
-
-  :release-tasks
-  [["shell" "git" "diff" "--exit-code"]
-   ["change" "version" "leiningen.release/bump-version" "release"]
-   ["codox"]
-   ["changelog" "release"]
-   ["shell" "sed" "-E" "-i.bak" "s/\"[0-9]+\\.[0-9]+\\.[0-9]+\"/\"${:version}\"/g" "README.md"]
-   ["shell" "rm" "-f" "README.md.bak"]
-   ["shell" "git" "add" "."]
-   ["vcs" "commit"]
-   ["vcs" "tag"]
-   ["deploy"]
-   ["change" "version" "leiningen.release/bump-version"]
-   ["vcs" "commit"]
-   ["vcs" "tag"]
-   ["vcs" "push"]]
-
-  :aliases {"test"      ["with-profile" "test" "eftest" ":all"]
-            "precommit" ["do"
-                         ["check"]
-                         ["kibit" "--replace"]
-                         ["cljfmt" "fix"]
-                         ["with-profile" "test" "bikeshed"
-                          "--name-collisions" "false"
-                          "--verbose" "true"]
-                         ["test"]]})
+  {"releases"  {:url "https://repo.clojars.org" :creds :gpg}
+   "snapshots" {:url "https://repo.clojars.org" :creds :gpg}})
