@@ -1,4 +1,4 @@
-(defproject ai.mypulse/liberator-hal-events-resource "0.1.0-RC1"
+(defproject ai.mypulse/liberator-hal-events-resource "0.1.0"
   :description "A HAL events resource for liberator."
   :url "https://github.com/Global-Online-Health/liberator-hal-events-resource"
 

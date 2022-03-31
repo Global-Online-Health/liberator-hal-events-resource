@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 
 ## [Unreleased]
+
+## [0.1.0] — 2022-03-31
 ### Changed
 - Forked from b-social/liberator-hal-events-resource
 
@@ -14,4 +16,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 Released without _CHANGELOG.md_.
 
 
-[Unreleased]: https://github.com/Global-Online-Health/liberator-hal-events-resource/compare/0.1.0-RC1...HEAD
+[0.1.0]: https://github.com/Global-Online-Health/liberator-hal-events-resource/compare/0.1.0-RC1...0.1.0
+[Unreleased]: https://github.com/Global-Online-Health/liberator-hal-events-resource/compare/0.1.0...HEAD
