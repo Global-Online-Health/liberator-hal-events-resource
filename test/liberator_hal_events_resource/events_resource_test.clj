@@ -220,3 +220,40 @@
     (testing "next link contain alternative route"
       (is (string/includes? (hal/get-href resource :next)
             "/other-events")))))
+
+(defrecord StreamFilteringEventsLoader [events]
+  EventsLoader
+  (load-events [_ {:keys [stream]}]
+    (filter
+      (fn [event] (= stream (-> event :payload :stream)))
+      events)))
+
+(deftest
+  events-resource-GET-on-success-when-loading-events-with-extra-query-param
+  (let [routes [["/events" :events]]
+        event-1 (data/make-random-event {:payload {:stream "stream-1"}})
+        event-2 (data/make-random-event {:payload {:stream "stream-2"}})
+        event-3 (data/make-random-event {:payload {:stream "stream-3"}})
+        events [event-1 event-2 event-3]
+
+        events-resource (-> (build-events-resource
+                              {:routes routes}
+                              10
+                              (->StreamFilteringEventsLoader events)
+                              events/event->resource)
+                          (keyword-params/wrap-keyword-params)
+                          (params/wrap-params))
+
+        first-result (stubs/call-resource
+                       events-resource
+                       (ring/request :get "/events" {:stream "stream-1"}))
+        resource (haljson/map->resource (:body first-result))
+        events (hal/get-resource resource :events)]
+
+    (testing "has one event"
+      (is (= 1 (count events))))
+
+    (testing "event is event with matching stream"
+      (is (= "stream-1" (-> events (first)
+                          (hal/get-property :event)
+                          (-> :payload :stream)))))))

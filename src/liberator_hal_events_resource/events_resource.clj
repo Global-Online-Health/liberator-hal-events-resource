@@ -18,7 +18,7 @@
 
 (defn load-and-transform-events [events-loader-fn events-transformer-fn]
   (let [events (events-loader-fn)
-        event-resources (map events-transformer-fn events)
+        event-resources (pmap events-transformer-fn events)
         event-links (map #(hal/get-link % :self) event-resources)]
     [events event-resources event-links]))
 
@@ -82,13 +82,16 @@
          [:get]
          :handle-ok
          (fn [{:keys [request]}]
-           (let [since (get-in request [:params :since] nil)
-                 order (.toUpperCase (get-in request [:params :order] "ASC"))
+           (let [params (:params request)
+                 since (:since params)
+                 order (.toUpperCase (:order params "ASC"))
                  page-size (get-in request [:params :pick] default-page-size)]
              (let [[events event-resources event-links]
                    (load-and-transform-events
-                     #(load-events events-loader
-                        {:since since :pick page-size :order order})
+                     #(load-events
+                        events-loader
+                        (merge params
+                          {:pick page-size :order order}))
                      #(events-transformer-fn dependencies request routes %))]
                (->
                  (hal/new-resource)
