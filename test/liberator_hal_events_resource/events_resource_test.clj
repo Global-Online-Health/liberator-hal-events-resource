@@ -16,30 +16,45 @@
     [liberator-hal-events-resource.events-resource :refer :all]
     [liberator-hal-events-resource.stubs.data :as data]
     [liberator-hal-events-resource.stubs.stubs :as stubs]
-    [clojure.string :as string]))
+    [clojure.string :as string]
+    [org.bovinegenius.exploding-fish :as uri]))
 
 (deftest events-resource-GET-on-success
   (let [routes [""
                 [["/events" :events]]]
-        event-1 (data/make-random-event)
-        event-2 (data/make-random-event)
+        other-value "123"
+        pick-value 10
+        event-id (data/random-uuid)
+        event-1 (data/make-random-event {:id event-id})
         events-resource (-> (build-events-resource
-                              {:routes routes} 10
-                              (stubs/->StubEventsLoader [event-1 event-2])
+                              {:routes routes}
+                              pick-value
+                              (stubs/->StubEventsLoader [event-1])
                               events/event->resource)
                           (keyword-params/wrap-keyword-params)
                           (params/wrap-params))
         result (stubs/call-resource
                  events-resource
-                 (ring/request :get "/events"))
+                 (ring/request :get "/events" {:other other-value}))
         resource (haljson/map->resource (:body result))]
 
     (testing "contains self link "
-      (is (string/includes? (hal/get-href resource :self)
-            "/events")))
+      (let [self-link (uri/uri (hal/get-href resource :self))
+            {:strs [pick other]} (uri/query-map self-link)]
+        (is (= "/events" (uri/path self-link)))
+        (is (= (str pick-value) pick))
+        (is (= other-value other))))
+
+    (testing "contains next link"
+      (let [next-link (uri/uri (hal/get-href resource :next))
+            {:strs [pick since other]} (uri/query-map next-link)]
+        (is (= "/events" (uri/path next-link)))
+        (is (= event-id since))
+        (is (= (str pick-value) pick))
+        (is (= other-value other))))
 
     (testing "transform the event correctly"
-      (is (= [(:id event-1) (:id event-2)]
+      (is (= [event-id]
             (map #(:id (hal/get-property % :event))
               (hal/get-resource resource :events)))))))
 

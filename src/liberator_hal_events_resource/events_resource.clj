@@ -31,6 +31,7 @@
   (events-link-for request
     routes
     (merge
+      (:params request)
       {:pick page-size}
       (when-not (nil? since)
         {:since since}))
@@ -40,8 +41,9 @@
   (let [since (:id (last events))]
     (events-link-for request
       routes
-      {:since since
-       :pick  page-size}
+      (merge (:params request)
+             {:since since
+              :pick  page-size})
       options)))
 
 (defn add-next-link
