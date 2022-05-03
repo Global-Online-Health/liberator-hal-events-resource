@@ -22,8 +22,6 @@
 (deftest events-resource-GET-on-success
   (let [routes [""
                 [["/events" :events]]]
-        number-value "123"
-        collection-value "[\"a\",    \"b\"]"
         pick-value 10
         event-id (data/random-uuid)
         event-1 (data/make-random-event {:id event-id})
@@ -36,31 +34,58 @@
                           (params/wrap-params))
         result (stubs/call-resource
                  events-resource
-                 (ring/request :get "/events" {:number number-value
-                                               :collection collection-value}))
+                 (ring/request :get "/events"))
         resource (haljson/map->resource (:body result))]
 
     (testing "contains self link "
       (let [self-link (uri/uri (hal/get-href resource :self))
-            {:strs [pick number collection]} (uri/query-map self-link)]
+            {:strs [pick]} (uri/query-map self-link)]
         (is (= "/events" (uri/path self-link)))
-        (is (= (str pick-value) pick))
-        (is (= number-value number))
-        (is (= collection-value collection))))
+        (is (= (str pick-value) pick))))
 
     (testing "contains next link"
       (let [next-link (uri/uri (hal/get-href resource :next))
-            {:strs [pick since number collection]} (uri/query-map next-link)]
+            {:strs [pick since]} (uri/query-map next-link)]
         (is (= "/events" (uri/path next-link)))
         (is (= event-id since))
-        (is (= (str pick-value) pick))
-        (is (= number-value number))
-        (is (= collection-value collection))))
+        (is (= (str pick-value) pick))))
 
     (testing "transform the event correctly"
       (is (= [event-id]
             (map #(:id (hal/get-property % :event))
               (hal/get-resource resource :events)))))))
+
+(deftest events-resource-GET-on-success-with-extra-query-params
+  (let [routes [""
+                [["/events" :events]]]
+        number-value "123"
+        collection-value  "[ \"a\", \"b\" ]"
+        event-id (data/random-uuid)
+        event-1 (data/make-random-event {:id event-id})
+        events-resource (-> (build-events-resource
+                              {:routes routes}
+                              10
+                              (stubs/->StubEventsLoader [event-1])
+                              events/event->resource)
+                          (keyword-params/wrap-keyword-params)
+                          (params/wrap-params))
+        result (stubs/call-resource
+                 events-resource
+                 (ring/request :get "/events" {:number number-value
+                                               :collection collection-value}))
+        resource (haljson/map->resource (:body result))]
+
+    (testing "self link contains extra query params"
+      (let [self-link (uri/uri (hal/get-href resource :self))
+            {:strs [number collection]} (uri/query-map self-link)]
+        (is (= number-value number))
+        (is (= collection-value collection))))
+
+    (testing "next link contains extra query params"
+      (let [next-link (uri/uri (hal/get-href resource :next))
+            {:strs [number collection]} (uri/query-map next-link)]
+        (is (= number-value number))
+        (is (= collection-value collection))))))
 
 (deftest events-resource-GET-on-no-events-found
   (let [routes [""
