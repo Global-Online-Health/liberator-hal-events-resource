@@ -22,7 +22,8 @@
 (deftest events-resource-GET-on-success
   (let [routes [""
                 [["/events" :events]]]
-        other-value "123"
+        number-value "123"
+        collection-value "[\"a\",    \"b\"]"
         pick-value 10
         event-id (data/random-uuid)
         event-1 (data/make-random-event {:id event-id})
@@ -35,23 +36,26 @@
                           (params/wrap-params))
         result (stubs/call-resource
                  events-resource
-                 (ring/request :get "/events" {:other other-value}))
+                 (ring/request :get "/events" {:number number-value
+                                               :collection collection-value}))
         resource (haljson/map->resource (:body result))]
 
     (testing "contains self link "
       (let [self-link (uri/uri (hal/get-href resource :self))
-            {:strs [pick other]} (uri/query-map self-link)]
+            {:strs [pick number collection]} (uri/query-map self-link)]
         (is (= "/events" (uri/path self-link)))
         (is (= (str pick-value) pick))
-        (is (= other-value other))))
+        (is (= number-value number))
+        (is (= collection-value collection))))
 
     (testing "contains next link"
       (let [next-link (uri/uri (hal/get-href resource :next))
-            {:strs [pick since other]} (uri/query-map next-link)]
+            {:strs [pick since number collection]} (uri/query-map next-link)]
         (is (= "/events" (uri/path next-link)))
         (is (= event-id since))
         (is (= (str pick-value) pick))
-        (is (= other-value other))))
+        (is (= number-value number))
+        (is (= collection-value collection))))
 
     (testing "transform the event correctly"
       (is (= [event-id]
