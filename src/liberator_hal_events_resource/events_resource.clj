@@ -1,14 +1,14 @@
 (ns liberator-hal-events-resource.events-resource
   (:require
-    [halboy.resource :as hal]
+   [halboy.resource :as hal]
 
-    [hype.core :as hype]
+   [hype.core :as hype]
 
-    [liberator-mixin.core :refer [build-resource]]
-    [liberator-mixin.json.core :refer [with-json-mixin]]
-    [liberator-mixin.validation.core :refer [with-validation-mixin]]
-    [liberator-mixin.hypermedia.core :refer [with-hypermedia-mixin]]
-    [liberator-mixin.hal.core :refer [with-hal-mixin]]))
+   [liberator-mixin.core :refer [build-resource]]
+   [liberator-mixin.json.core :refer [with-json-mixin]]
+   [liberator-mixin.validation.core :refer [with-validation-mixin]]
+   [liberator-mixin.hypermedia.core :refer [with-hypermedia-mixin]]
+   [liberator-mixin.hal.core :refer [with-hal-mixin]]))
 
 (defn with-unauthorised-handling
   []
@@ -62,45 +62,45 @@
     default-page-size
     events-loader
     events-transformer-fn]
-    (build-events-resource dependencies
-      default-page-size
-      events-loader
-      events-transformer-fn
-      {}))
+   (build-events-resource dependencies
+     default-page-size
+     events-loader
+     events-transformer-fn
+     {}))
   ([dependencies
     default-page-size
     events-loader
     events-transformer-fn
     options]
-    (let [routes (:routes dependencies)]
-      (build-resource
-        (with-json-mixin dependencies)
-        (with-validation-mixin dependencies)
-        (with-hypermedia-mixin dependencies)
-        (with-hal-mixin dependencies)
-        (with-unauthorised-handling)
+   (let [routes (:routes dependencies)]
+     (build-resource
+       (with-json-mixin dependencies)
+       (with-validation-mixin dependencies)
+       (with-hypermedia-mixin dependencies)
+       (with-hal-mixin dependencies)
+       (with-unauthorised-handling)
 
-        {:allowed-methods
-         [:get]
-         :handle-ok
-         (fn [{:keys [request]}]
-           (let [params (:params request)
-                 since (:since params)
-                 order (.toUpperCase (:order params "ASC"))
-                 page-size (get-in request [:params :pick] default-page-size)]
-             (let [[events event-resources event-links]
-                   (load-and-transform-events
-                     #(load-events
-                        events-loader
-                        (merge params
-                          {:pick page-size :order order}))
-                     #(events-transformer-fn dependencies request routes %))]
-               (->
-                 (hal/new-resource)
-                 (hal/add-links
-                   {:self
-                    (self-link-for request routes since page-size options)
-                    :events
-                    event-links})
-                 (add-next-link request routes events page-size options)
-                 (hal/add-resource :events event-resources)))))}))))
+       {:allowed-methods
+        [:get]
+        :handle-ok
+        (fn [{:keys [request]}]
+          (let [params (:params request)
+                since (:since params)
+                order (.toUpperCase (:order params "ASC"))
+                page-size (get-in request [:params :pick] default-page-size)]
+            (let [[events event-resources event-links]
+                  (load-and-transform-events
+                    #(load-events
+                       events-loader
+                       (merge params
+                         {:pick page-size :order order}))
+                    #(events-transformer-fn dependencies request routes %))]
+              (->
+                (hal/new-resource)
+                (hal/add-links
+                  {:self
+                   (self-link-for request routes since page-size options)
+                   :events
+                   event-links})
+                (add-next-link request routes events page-size options)
+                (hal/add-resource :events event-resources)))))}))))

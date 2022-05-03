@@ -1,6 +1,6 @@
 (ns liberator-hal-events-resource.events
   (:require
-    [halboy.resource :as hal]))
+   [halboy.resource :as hal]))
 
 (defmulti event->resource (fn [_ _ _ e] (:type e)))
 

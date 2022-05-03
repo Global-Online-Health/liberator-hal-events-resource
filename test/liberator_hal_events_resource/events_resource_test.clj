@@ -1,23 +1,23 @@
 (ns liberator-hal-events-resource.events-resource-test
   (:require
-    [clojure.test :refer :all]
-    [clojure.string :refer [ends-with?]]
+   [clojure.test :refer :all]
+   [clojure.string :refer [ends-with?]]
 
-    [halboy.resource :as hal]
-    [halboy.json :as haljson]
+   [halboy.resource :as hal]
+   [halboy.json :as haljson]
 
-    [ring.mock.request :as ring]
-    [ring.middleware.params :as params]
-    [ring.middleware.keyword-params :as keyword-params]
+   [ring.mock.request :as ring]
+   [ring.middleware.params :as params]
+   [ring.middleware.keyword-params :as keyword-params]
 
-    [org.bovinegenius.exploding-fish :refer [absolute?]]
+   [org.bovinegenius.exploding-fish :refer [absolute?]]
 
-    [liberator-hal-events-resource.events :as events]
-    [liberator-hal-events-resource.events-resource :refer :all]
-    [liberator-hal-events-resource.stubs.data :as data]
-    [liberator-hal-events-resource.stubs.stubs :as stubs]
-    [clojure.string :as string]
-    [org.bovinegenius.exploding-fish :as uri]))
+   [liberator-hal-events-resource.events :as events]
+   [liberator-hal-events-resource.events-resource :refer :all]
+   [liberator-hal-events-resource.stubs.data :as data]
+   [liberator-hal-events-resource.stubs.stubs :as stubs]
+   [clojure.string :as string]
+   [org.bovinegenius.exploding-fish :as uri]))
 
 (deftest events-resource-GET-on-success
   (let [routes [""
