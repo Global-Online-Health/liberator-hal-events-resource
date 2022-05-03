@@ -8,7 +8,8 @@
    [liberator-mixin.json.core :refer [with-json-mixin]]
    [liberator-mixin.validation.core :refer [with-validation-mixin]]
    [liberator-mixin.hypermedia.core :refer [with-hypermedia-mixin]]
-   [liberator-mixin.hal.core :refer [with-hal-mixin]]))
+   [liberator-mixin.hal.core :refer [with-hal-mixin]]
+   [clojure.walk :as walk]))
 
 (defn with-unauthorised-handling
   []
@@ -31,19 +32,20 @@
   (events-link-for request
     routes
     (merge
-      (:query-params request)
-      {"pick" page-size}
+      (walk/keywordize-keys (:query-params request))
+      {:pick page-size}
       (when-not (nil? since)
-        {"since" since}))
+        {:since since}))
     options))
 
 (defn next-link-for [request routes events page-size options]
   (let [since (:id (last events))]
     (events-link-for request
       routes
-      (merge (:query-params request)
-        {"since"  since
-         "pick" page-size})
+      (merge
+        (walk/keywordize-keys (:query-params request))
+        {:since  since
+         :pick   page-size})
       options)))
 
 (defn add-next-link
