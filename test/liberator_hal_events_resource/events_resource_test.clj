@@ -1,37 +1,31 @@
 (ns liberator-hal-events-resource.events-resource-test
   (:require
-   [clojure.test :refer :all]
-   [clojure.string :refer [ends-with?]]
-
-   [halboy.resource :as hal]
-   [halboy.json :as haljson]
-
-   [ring.mock.request :as ring]
-   [ring.middleware.params :as params]
-   [ring.middleware.keyword-params :as keyword-params]
-
-   [org.bovinegenius.exploding-fish :refer [absolute?]]
-
-   [liberator-hal-events-resource.events :as events]
-   [liberator-hal-events-resource.events-resource :refer :all]
-   [liberator-hal-events-resource.stubs.data :as data]
-   [liberator-hal-events-resource.stubs.stubs :as stubs]
-   [clojure.string :as string]
-   [org.bovinegenius.exploding-fish :as uri]))
+    [clojure.string :as string]
+    [clojure.test :refer [deftest is testing]]
+    [halboy.json :as haljson]
+    [halboy.resource :as hal]
+    [liberator-hal-events-resource.events :as events]
+    [liberator-hal-events-resource.events-resource :refer :all]
+    [liberator-hal-events-resource.stubs.data :as data]
+    [liberator-hal-events-resource.stubs.stubs :as stubs]
+    [org.bovinegenius.exploding-fish :as uri]
+    [ring.middleware.keyword-params :as keyword-params]
+    [ring.middleware.params :as params]
+    [ring.mock.request :as ring]))
 
 (deftest events-resource-GET-on-success
   (let [routes [""
                 [["/events" :events]]]
         pick-value 10
-        event-id (data/random-uuid)
+        event-id (str (random-uuid))
         event-1 (data/make-random-event {:id event-id})
         events-resource (-> (build-events-resource
                               {:routes routes}
                               pick-value
                               (stubs/->StubEventsLoader [event-1])
                               events/event->resource)
-                          (keyword-params/wrap-keyword-params)
-                          (params/wrap-params))
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
         result (stubs/call-resource
                  events-resource
                  (ring/request :get "/events"))
@@ -52,23 +46,23 @@
 
     (testing "transform the event correctly"
       (is (= [event-id]
-            (map #(:id (hal/get-property % :event))
-              (hal/get-resource resource :events)))))))
+             (map #(:id (hal/get-property % :event))
+                  (hal/get-resource resource :events)))))))
 
 (deftest events-resource-GET-on-success-with-extra-query-params
   (let [routes [""
                 [["/events" :events]]]
         number-value "123"
         collection-value  "[ \"a\", \"b\" ]"
-        event-id (data/random-uuid)
+        event-id (str (random-uuid))
         event-1 (data/make-random-event {:id event-id})
         events-resource (-> (build-events-resource
                               {:routes routes}
                               10
                               (stubs/->StubEventsLoader [event-1])
                               events/event->resource)
-                          (keyword-params/wrap-keyword-params)
-                          (params/wrap-params))
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
         result (stubs/call-resource
                  events-resource
                  (ring/request :get "/events" {:number number-value
@@ -94,8 +88,8 @@
                               {:routes routes} 10
                               (stubs/->StubEventsLoader [])
                               events/event->resource)
-                          (keyword-params/wrap-keyword-params)
-                          (params/wrap-params))
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
         result (stubs/call-resource
                  events-resource
                  (ring/request :get "/events"))
@@ -109,9 +103,9 @@
 (deftest events-resource-GET-on-events-found
   (let [routes [""
                 [["/events" :events]]]
-        first-event-id (data/random-uuid)
-        second-event-id (data/random-uuid)
-        third-event-id (data/random-uuid)
+        first-event-id (str (random-uuid))
+        second-event-id (str (random-uuid))
+        third-event-id (str (random-uuid))
         event-1 (data/make-random-event {:id first-event-id})
         event-2 (data/make-random-event {:id second-event-id})
         event-3 (data/make-random-event {:id third-event-id})
@@ -121,8 +115,8 @@
                                                          event-2
                                                          event-3])
                               events/event->resource)
-                          (keyword-params/wrap-keyword-params)
-                          (params/wrap-params))
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
         result (stubs/call-resource
                  events-resource
                  (ring/request :get "/events"))
@@ -131,16 +125,16 @@
 
     (testing "returns links to those events"
       (is (= [first-event-id second-event-id third-event-id]
-            (map #(-> %
-                    (hal/get-property :event)
-                    :id) events))))))
+             (map #(-> %
+                       (hal/get-property :event)
+                       :id) events))))))
 
 (deftest events-resource-GET-on-page-size-specified
   (let [routes [""
                 [["/events" :events]]]
-        first-event-id (data/random-uuid)
-        second-event-id (data/random-uuid)
-        third-event-id (data/random-uuid)
+        first-event-id (str (random-uuid))
+        second-event-id (str (random-uuid))
+        third-event-id (str (random-uuid))
         event-1 (data/make-random-event {:id first-event-id})
         event-2 (data/make-random-event {:id second-event-id})
         event-3 (data/make-random-event {:id third-event-id})
@@ -150,8 +144,8 @@
                                                          event-2
                                                          event-3])
                               events/event->resource)
-                          (keyword-params/wrap-keyword-params)
-                          (params/wrap-params))
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
         page-size 2
         first-result (stubs/call-resource
                        events-resource
@@ -167,25 +161,25 @@
         second-page (haljson/map->resource (:body second-result))]
     (testing "returns ids to those events"
       (is (= [first-event-id second-event-id]
-            (->>
-              first-page
-              (map #(hal/get-property % :event))
-              (map :id)))))
+             (->>
+               first-page
+               (map #(hal/get-property % :event))
+               (map :id)))))
 
     (testing "provides a next link which goes to the next page"
       (let [event-resources (->
                               second-page
                               (hal/get-resource :events))
             event-ids (->> event-resources
-                        (map #(:id (hal/get-property % :event))))]
+                           (map #(:id (hal/get-property % :event))))]
         (is (= [third-event-id] event-ids))))))
 
 (deftest events-resource-GET-on-order-specified
   (let [routes [""
                 [["/events" :events]]]
-        first-event-id (data/random-uuid)
-        second-event-id (data/random-uuid)
-        third-event-id (data/random-uuid)
+        first-event-id (str (random-uuid))
+        second-event-id (str (random-uuid))
+        third-event-id (str (random-uuid))
         event-1 (data/make-random-event {:id first-event-id})
         event-2 (data/make-random-event {:id second-event-id})
         event-3 (data/make-random-event {:id third-event-id})
@@ -196,8 +190,8 @@
                                                          event-2
                                                          event-3])
                               events/event->resource)
-                          (keyword-params/wrap-keyword-params)
-                          (params/wrap-params))
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
         first-result (stubs/call-resource
                        events-resource
                        (ring/request :get "/events" {:order "DESC"}))
@@ -207,21 +201,21 @@
 
     (testing "returns ids to those events"
       (is (= [third-event-id second-event-id first-event-id]
-            (->>
-              page
-              (map #(hal/get-property % :event))
-              (map :id)))))))
+             (->>
+               page
+               (map #(hal/get-property % :event))
+               (map :id)))))))
 
 (deftest events-resource-GET-on-last-page
   (let [routes [["/events" :events]]
-        first-event-id (data/random-uuid)
+        first-event-id (str (random-uuid))
         event-1 (data/make-random-event {:id first-event-id})
         events-resource (-> (build-events-resource
                               {:routes routes} 10
                               (stubs/->StubEventsLoader [event-1])
                               events/event->resource)
-                          (keyword-params/wrap-keyword-params)
-                          (params/wrap-params))
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
         page-size 1
 
         first-result (stubs/call-resource
@@ -250,8 +244,8 @@
                               (stubs/->StubEventsLoader [event-1 event-2])
                               events/event->resource
                               {:route-key :other-events})
-                          (keyword-params/wrap-keyword-params)
-                          (params/wrap-params))
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
         result (stubs/call-resource
                  events-resource
                  (ring/request :get "/other-events"))
@@ -259,18 +253,18 @@
 
     (testing "self link contain alternative route"
       (is (string/includes? (hal/get-href resource :self)
-            "/other-events")))
+                            "/other-events")))
 
     (testing "next link contain alternative route"
       (is (string/includes? (hal/get-href resource :next)
-            "/other-events")))))
+                            "/other-events")))))
 
 (defrecord StreamFilteringEventsLoader [events]
-  EventsLoader
-  (load-events [_ {:keys [stream]}]
-    (filter
-      (fn [event] (= stream (-> event :payload :stream)))
-      events)))
+           EventsLoader
+           (load-events [_ {:keys [stream]}]
+             (filter
+               (fn [event] (= stream (-> event :payload :stream)))
+               events)))
 
 (deftest
   events-resource-GET-on-success-when-loading-events-with-extra-query-param
@@ -285,8 +279,8 @@
                               10
                               (->StreamFilteringEventsLoader events)
                               events/event->resource)
-                          (keyword-params/wrap-keyword-params)
-                          (params/wrap-params))
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
 
         first-result (stubs/call-resource
                        events-resource
@@ -299,5 +293,5 @@
 
     (testing "event is event with matching stream"
       (is (= "stream-1" (-> events (first)
-                          (hal/get-property :event)
-                          (-> :payload :stream)))))))
+                            (hal/get-property :event)
+                            (-> :payload :stream)))))))

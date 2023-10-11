@@ -1,20 +1,34 @@
-/target
-/classes
-/checkouts
-profiles.clj
-pom.xml
-pom.xml.asc
-*.jar
-*.class
-/.lein-*
-/.nrepl-port
-.hgignore
-.hg/
+# vim
+*.swp
+*.swo
+
+# IntelliJ
+.idea/
+*.ipr
 *.iml
 *.iws
-*.ipr
+
+# Build
+/vendor/
+/build/
+/target/
+dist/
+.clj-kondo/.cache
+
+# OS
 .DS_Store
-/vendor
-.eastwood
-.bundle
-.idea
+
+# Temporary
+run/pids/
+run/logs/
+*.log
+.tmp
+.rakeTasks
+
+# Terraform
+.terraform
+.nrepl-port
+
+# Leiningen
+.lein-repl-history
+.lein-env
