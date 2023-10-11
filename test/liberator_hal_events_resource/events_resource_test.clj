@@ -5,7 +5,7 @@
     [halboy.json :as haljson]
     [halboy.resource :as hal]
     [liberator-hal-events-resource.events :as events]
-    [liberator-hal-events-resource.events-resource :refer :all]
+    [liberator-hal-events-resource.events-resource :refer [build-events-resource EventsLoader]]
     [liberator-hal-events-resource.stubs.data :as data]
     [liberator-hal-events-resource.stubs.stubs :as stubs]
     [org.bovinegenius.exploding-fish :as uri]
@@ -266,8 +266,7 @@
                (fn [event] (= stream (-> event :payload :stream)))
                events)))
 
-(deftest
-  events-resource-GET-on-success-when-loading-events-with-extra-query-param
+(deftest events-resource-GET-on-success-when-loading-events-with-extra-query-param
   (let [routes [["/events" :events]]
         event-1 (data/make-random-event {:payload {:stream "stream-1"}})
         event-2 (data/make-random-event {:payload {:stream "stream-2"}})
@@ -295,3 +294,24 @@
       (is (= "stream-1" (-> events (first)
                             (hal/get-property :event)
                             (-> :payload :stream)))))))
+
+(deftest events-resource-adds-liberator-overrides-if-provided
+  (let [routes ["" [["/events" :events]]]
+        events-resource
+        (-> (build-events-resource
+              {:routes routes}
+              10
+              (stubs/->StubEventsLoader [])
+              events/event->resource
+              {:overrides {:handle-ok (fn [_] {:override "test test"})}})
+            (keyword-params/wrap-keyword-params)
+            (params/wrap-params))
+
+        result (stubs/call-resource
+                 events-resource
+                 (ring/request :get "/events"))
+
+        resource (haljson/map->resource (:body result))]
+
+    (testing "the override is used"
+      (is (= "test test" (hal/get-property resource :override))))))

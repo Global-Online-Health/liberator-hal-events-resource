@@ -66,11 +66,12 @@
     default-page-size
     events-loader
     events-transformer-fn]
-   (build-events-resource dependencies
-                          default-page-size
-                          events-loader
-                          events-transformer-fn
-                          {}))
+   (build-events-resource
+     dependencies
+     default-page-size
+     events-loader
+     events-transformer-fn
+     {}))
   ([dependencies
     default-page-size
     events-loader
@@ -91,23 +92,24 @@
           (let [params (:params request)
                 since (:since params)
                 order (.toUpperCase (:order params "ASC"))
-                page-size (get-in request [:params :pick] default-page-size)]
-            (let [[events event-resources event-links]
-                  (load-and-transform-events
-                    #(load-events
-                       events-loader
-                       (merge params
-                              {:pick page-size :order order}))
-                    #(events-transformer-fn dependencies request routes %))]
-              (->
-                (hal/new-resource)
-                (hal/add-links
-                  {:self
-                   (self-link-for request routes since page-size options)
-                   :events
-                   event-links})
-                (add-next-link request routes events page-size options)
-                (hal/add-resource :events event-resources)))))}
+                page-size (get-in request [:params :pick] default-page-size)
+
+                [events event-resources event-links]
+                (load-and-transform-events
+                  #(load-events
+                     events-loader
+                     (merge params
+                            {:pick page-size :order order}))
+                  #(events-transformer-fn dependencies request routes %))]
+            (->
+              (hal/new-resource)
+              (hal/add-links
+                {:self
+                 (self-link-for request routes since page-size options)
+                 :events
+                 event-links})
+              (add-next-link request routes events page-size options)
+              (hal/add-resource :events event-resources))))}
 
        (when (:overrides options)
          (:overrides options))))))
