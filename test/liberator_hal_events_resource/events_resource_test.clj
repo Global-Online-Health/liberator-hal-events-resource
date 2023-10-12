@@ -315,3 +315,39 @@
 
     (testing "the override is used"
       (is (= "test test" (hal/get-property resource :override))))))
+
+(defrecord ContextTestingEventsLoader [events]
+           EventsLoader
+           (load-events [_ context]
+             (filter
+               (fn [event] (= (get-in context [:request :uri]) (-> event :payload :uri)))
+               events)))
+
+(deftest events-loader-passes-liberator-context
+  (let [routes [["/events" :events]]
+        event-1 (data/make-random-event {:payload {:uri "/not-events"}})
+        event-2 (data/make-random-event {:payload {:uri "/events"}})
+        event-3 (data/make-random-event {:payload {:uri "/not-events"}})
+        events [event-1 event-2 event-3]
+
+        events-resource (-> (build-events-resource
+                              {:routes routes}
+                              10
+                              (->ContextTestingEventsLoader events)
+                              events/event->resource)
+                            (keyword-params/wrap-keyword-params)
+                            (params/wrap-params))
+
+        first-result (stubs/call-resource
+                       events-resource
+                       (ring/request :get "/events" {:stream "stream-1"}))
+        resource (haljson/map->resource (:body first-result))
+        events (hal/get-resource resource :events)]
+
+    (testing "has one event"
+      (is (= 1 (count events))))
+
+    (testing "event is event with matching context from request"
+      (is (= "/events" (-> events (first)
+                           (hal/get-property :event)
+                           (-> :payload :uri)))))))

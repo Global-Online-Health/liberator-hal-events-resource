@@ -88,7 +88,7 @@
        {:allowed-methods
         [:get]
         :handle-ok
-        (fn [{:keys [request]}]
+        (fn [{:keys [request] :as context}]
           (let [params (:params request)
                 since (:since params)
                 order (.toUpperCase (:order params "ASC"))
@@ -98,8 +98,7 @@
                 (load-and-transform-events
                   #(load-events
                      events-loader
-                     (merge params
-                            {:pick page-size :order order}))
+                     (merge context params {:pick page-size :order order}))
                   #(events-transformer-fn dependencies request routes %))]
             (->
               (hal/new-resource)
